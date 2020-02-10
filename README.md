@@ -43,3 +43,28 @@ Permissions are defined on a number of basises:
  - Group Identities allow user to join groups. The OS can allow for entire groups to have generic access to files.
  - Privilege Escalation allows a user to gain more privileges in the system.
 
+## Interfacing with the OS
+### System utilities
+The OS provides utilities for
+ - Process status and managenement
+ - File and directory manipulation
+ - File modification and text processing
+ - Programming language support
+ - Progam loading and execution
+ - Communications
+ - Application programs
+
+Users generally interact with this higher level interface. This interface is a set of *system calls*. These APIs provide a portable and simple layer for users to interface with the OS
+
+### File Descriptors
+When opening a file, a file descriptor is returned. Integer which points to a metadata structure. Function takes in a path and flags describing read, write, etc.  
+When done with the file, `close(fileDescriptor)` closes the file.  
+Each process has a file descriptor table which points to a system-wide file table.  
+`read(fileD, buffer, count)` Read from some file to a buffer, count number of bytes.  
+`write(fileD, buffer, count)` Write from buffer to a file, count number of bytes.  
+As you write, their is a seek offset which is contiuously updated as you write more bytes. Ensures that you write to a new place in your file.
+
+## OS Structures
+There are generally monolithic and microkernel structures. A monolithic kernel is one in-which the kernel provides most functions, and in doing so can manage all tasks in a high-performance manner.  
+Microkernels are lighterweight and implement less features, allowing them to be easily extended. They are generally more secure and more reliable, since there is less that can fail.  
+We can also imagine a virtual machine, where a host provides an illusion of an underlying host to some running programs.
