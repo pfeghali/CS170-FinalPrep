@@ -157,3 +157,33 @@ When switching processes, we call this *context switching*. Context is defined i
 There is multi-level scheduling.
  - Long-term scheduling which selects which processes should be brought into the ready queue - invoked on the minute/second level.  
  - Short-term scheduling involves selecting what process should be executed next on the CPU, executed on the millisecond scale.
+
+## Threads
+A *thread* is a fnudamental unit of CPU utilization that forms the basis for multithreading  
+Implemented with pthreads, java threads, etc - and threads are associated with a process.  
+Threads provide shared memory access for code and data, though with seperate control flow, stack and regs.  
+When switching threads, need to save PC and registers. They're saved in a *thread control block*.  
+Multithreading provides:
+ - faster and more responseive programs
+ - resource sharing
+ - scales to more resources easily
+
+Execution is interleaved between sets of threads, and on multicore systems these threads can execute their work concurrently.  
+### Threads vs Processes
+Similair as they both have logical control flows, can run concurrently, and each is context switched.  
+Different as threads share code and data, and processes typically do not, and threads are cheaper with less overhead.  
+### Creating a pthread
+```c
+pthread_t thread0;
+pthread_Create(&thread0, NULL, Printhello, (void*) 0);
+```
+Must be compiled and linked with the pthread library:
+```sh
+gcc -o -lpthread
+```
+Join allows for one pthread to wait for another to finish and then they can recombine.  
+`pthread_yield()` allows one thread to yield for another pthread.  
+### User threads vs Kernel threads
+Quite obviously, and  user threads are not real threads. User threads are user managed, and while they ar technically a 'thread', the user has to manage them and to allow them to run on multiple cores. Since they are nt system recognized, they run serially by default unless the system knows to schedule work seperately on multicore systems.  
+Kernel threads are supported by the system and the oS supports swithcing and such.  
+When context xwitching there is overhead, and nothing useful done during that time
