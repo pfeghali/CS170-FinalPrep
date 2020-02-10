@@ -68,3 +68,92 @@ As you write, their is a seek offset which is contiuously updated as you write m
 There are generally monolithic and microkernel structures. A monolithic kernel is one in-which the kernel provides most functions, and in doing so can manage all tasks in a high-performance manner.  
 Microkernels are lighterweight and implement less features, allowing them to be easily extended. They are generally more secure and more reliable, since there is less that can fail.  
 We can also imagine a virtual machine, where a host provides an illusion of an underlying host to some running programs.
+
+## Process
+*Process* is a program in execution. In memory this includes a program counter, the stack and heap, and data/instructions.  
+Parent processes create children. Processes are identified via *PID*.
+There are options in resouorce sharing: parent and children share all resources, some, or none.  
+Parent and children execute concurrently, and the parent wasits for the children to terminate. Children duplicate the address space of the parent.  
+*`fork`* creates a new process with a duplicated address space  
+*`exec`* is used after fork to replace the memory space with a new program.  
+Code example from lecture:  
+```c
+int pid;
+if(pid = fork()){
+    exec*("program",[argvp, envp]);
+    exit(status);
+} else {
+    pid = wait*(&status);
+}
+```
+Fork returns PID to parent and 0 to the child.  
+All open FDs are duplicated in children, and read/write seek offsets are shared.  
+## File I/O standards
+ - 0 stdin
+ - 1 stdout
+ - 2 stderr
+
+```c
+dup2(int oldFd, int newFd);
+```
+Creates a copy of the oldFd for newFd so they refer to the same table entry.  
+## Process Communication
+After a parent executes the last statement, it asks the OS to delete it. Resources are deallocated.
+Parents may terminate child processes.  
+Processes communicate via IPC - interprocess communication. This can be implemented in a few ways, primarily shared memory and message passing. Processes that know each other directly can send direct messages via IPC commands, otherwise can send/recieve via ports.  
+Generally this can be implemented via
+ - Unix Pipes
+ - Unix Signals
+ - Shared memory IPC
+ - Sockets
+ - Remote Procedure Calls - IPC
+
+File I/O can be used as communication between processes -  essentially view files are communication channels.   
+unix pipes create a pipe with two pointes, the first to read, the second to write.  
+Unix signals can be used to communicate, similair to hardware interrupts without priority. They can be called in unix via `kill` or `killall`. Singal handlers are defined to handle them.  
+Can share memory between processes.
+
+## OS Running Programs
+general structure of running a program is as follows: First load instruction and data segments into memory. Then create a stack and heap. Transfer control to the program, and provide services.
+### Spaec Usage
+Space is split into:
+ - Stack - for function call frames
+ - Heap - for dynamically allocated space (`malloc`)
+ - BSS - for uninitialized global variables and static variables - initially zero
+ - Data - initialized global or static variables
+ - Text - binary code + constants
+
+### Executable File space usage
+ - header
+ - Text - program instructions
+ - iData - immutable data
+ - wData - writable data
+ - Symbol table
+ - Relocation records
+
+(last two used by linker - can be removed at the end)
+
+## Memory protection
+Simple memory protection can be done by leveraing bounded memory addresses. Anything outisde of some scope is invalid essentiallly. This is suboptimal, as it requires for continuous memory addressing.  
+Address space translation can help. Translate safe virtual addresses to new physical addresses.  
+
+### Process State
+ - New
+ - Running
+ - Waiting
+ - Ready
+ - Terminated
+
+### Switching from one process to another
+What needs to be saved to restore? Program Counter, Registers. Save data in *Process Control Block*.
+## Process Control Block
+Sores process state, PC, program number, copy of CPU registers, CPU scheduling information, memory management information, accounting information, I/O status information.  
+When switching processes, we call this *context switching*. Context is defined in the PCB.  
+## Process Scheduling Queues
+ - Job Queue - set of all processes in then system
+ - Ready Queue - set of all processes residing in main emory, ready and waiting to execute.
+ -  Device queues - set o f processes waiting for an I/O device
+
+There is multi-level scheduling.
+ - Long-term scheduling which selects which processes should be brought into the ready queue - invoked on the minute/second level.  
+ - Short-term scheduling involves selecting what process should be executed next on the CPU, executed on the millisecond scale.
