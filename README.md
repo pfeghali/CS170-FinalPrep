@@ -187,3 +187,30 @@ Join allows for one pthread to wait for another to finish and then they can reco
 Quite obviously, and  user threads are not real threads. User threads are user managed, and while they ar technically a 'thread', the user has to manage them and to allow them to run on multiple cores. Since they are nt system recognized, they run serially by default unless the system knows to schedule work seperately on multicore systems.  
 Kernel threads are supported by the system and the oS supports swithcing and such.  
 When context xwitching there is overhead, and nothing useful done during that time
+
+## Synchronization
+Gieven that a pipe is shard between a reader and a writer, how do you ensure that no one os reading while some other thread is writing? We can generalize this even further, given a set of readers and a set of writers, how do we mediate interactions fo these users.  
+*Race Conditions* are when threads/processes are reading and writing on shared data and the result depends on who runs first.  
+*Critical Sections* are parts of the program where the code needs to be synchronized intelligently.  
+Important properties:
+ - Mutual Exlusion - only one thread/proc can enter a critical section
+ - Progress - If some process needs to enter a ccrit section, then one can enter for a limted amount of time - essentially do not starve other procs.
+ - Bounded waiting - If one process starts to wait, there is a limit on the number of other procs hwich can enter first before we do, inotw, do not starve.
+
+## Locks and things
+### Locks
+Threads wait if there is a lock, enter the critical section after acquiring a lock. One access completes, it releases the lock. Only the thread which locks the lock can unlock it.  
+### Semaphores
+A semaphore is a lock representative of a non-negative integer. This integer is dynamic and represents the number of threads which can be in a shared section. Access is granted via atomic operations.
+ - `P()` = wait - waits until counter is greater than 0
+ - `V()` = signal - signals waiting threads that their is space and increments the counter
+
+We call a binary semaphore a mutex lock.  
+### Conditional variables
+We use conditional variables with locks to specify more general waiting conditions. Threads are blocked and placed in a waiting queue - woken up after receieving a signal.  
+Main functions:
+ - Wait
+ - Signal
+ - Broadcast - wakes up all waiting threads on that condition
+
+Conditional variables and locks can implement semaphores. Semaphores can implement conditional variables and locks.
