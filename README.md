@@ -7,7 +7,7 @@ OS needs to
  - Storage management
  - Protection and Security
 
-Needs to have high performancee, reliability, security, and portability
+Needs to have high performance, reliability, security, and portability
 ### Computer System Operation
 First, a bootstrap program is loaded on boot - stored in some sort of ROM generally, also known as firmware.  
 I/O and CPU can execute concurrently when power is on.  
