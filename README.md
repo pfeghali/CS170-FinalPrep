@@ -1,5 +1,5 @@
 # CS170-FinalPrep
-Please note: this document is *heavily* reliant on class lecture slides. This is intended to be a cleaned version of the slides.
+Please note: this document is *heavily* reliant on class lecture slides. This is intended to be a cleaned version of the slides. This has been very edited, and will continue to be edited as we approach the end of the course. Please let me know if there is anything that you'd like changed. Sorry for the typos.
 ### What we expect an OS to do
 OS needs to 
  - Manage processes
