@@ -337,4 +337,23 @@ P1 = 9, P2 = 11, d = 12.
 Maximum vitrual space size = #entries in L1\*#L2\*pageSize   = 4GB
 Maximum physical size = 2^16\*4K = 256MB.  
 
-As an extension of this, it is trivival to seee that a 3, or 4, or n level page table could be designed to fit larger needs.
+As an extension of this, it is trivival to seee that a 3, or 4, or n level page table could be designed to fit larger needs.  
+In this case, P3 = log(entries in L3 table)
+
+### Page Sharing
+A copy of shared code (read only) can be shared among processors. Shared code has to be in the same location of the logical address space for all the processes. This is sometimes known as lazy copying. The code and data though, would be independently stored and saved, to ensure there is not any interference.  
+One can imagine implementing Fork() with this in mind to optimize performance. Lazy copy initially, and copy on write when needed.  
+
+### Demand Paging
+Keep only active pages in memory, and put other onto disk and invalidate their bits.  
+
+### Zero fill
+Fill a page with zeros with one bit, make that page seem empty rather than overwriting the whole space with 0s, which takes some time.
+
+## Alternatives
+### Hashed Page Tables
+Size of page table grows with the amount of cirtual memory allocated. we can use a hash table to limit the cost of a search. One hash table per process.
+
+### Inverted page table
+Have a single hash table for all processes, with a single entry for each real page of memory. Each entry has the virtual address of the page, with metadata concerning the page.  
+This decreases the amount of memory needed to store each page table, but increased the time needed tosearch the table when a page reference occurs.
