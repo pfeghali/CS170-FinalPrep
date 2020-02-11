@@ -214,3 +214,50 @@ Main functions:
  - Broadcast - wakes up all waiting threads on that condition
 
 Conditional variables and locks can implement semaphores. Semaphores can implement conditional variables and locks.
+
+## Use of synchronization primitives
+We can control shynchronizatoin at a fine-grain or coarse-grain level. fine-grain synchronization allows for more performance flexibility and scalability, though potentially more design complexity.  
+Coarse grain is easier to ensure correctness, but harder to scale.  
+*Deadlock* - two or more threads are waiting indefinitely for an event that can be only caused by one of these waiting processes.
+*Starvation* - indefinite blocking on some thread.  
+
+### Generic scheduling types
+Hoare-style scheduling is where a signaler gives a lock, waiter runs immediately  
+Mesa-style scheduling is where the signaler keeps a lock and continues to process, while the waiter is placed on a ready queue. Therefore no need to recheck the condition after a wait. 
+
+Users need atomic primitives.  
+We can avoid context switching by disabling interrupts, but only for trusted users. If using this method, it is important to keep the critical section very short.  
+Rather than doing this, we usee atomic hardware instructions. These are instructions such as testAndSet, swap, compare and swap, etc.
+```cpp
+bool TestAndSet(*target){
+    rv = *target;
+    *targer = true;
+    return rv;
+}
+```
+An example with a spin lock:
+```cpp
+bool lock = 0;
+while(TestAndSet(&lock)) ;   // Acquire
+                // Critical section;
+lock = False;   //Release lock
+```
+You can do a better job with test&set + sleep. Spin locks work, but they're ineffecient and they waste plenty of CPU cycles. No guarantee on bounded waiting.  
+Consider:
+```cpp
+int guard = false;
+int value = FREE;
+Acquire() {
+    while (test&set(guard));
+    if not busy, sleep
+    value = BUSY;
+    guard = false;
+}
+
+Release() {
+    while(test&set(guard));
+    wake up others
+    value = FREE;
+    guard = false
+}
+```
