@@ -307,7 +307,7 @@ Consider a 16 byte page, which holds 4 ints per page. If we get int 1, for examp
 
 ### Constraints
 Each page table needs to fit within a physical memory page. This is since a page table needs consecutive space.
- - `Maximum soze = #entries*page size`
+ - `Maximum size = #entries*page size`
 
 Consider a one-level page table:
  - 32 bit address space, 4kb per page. Page table would contain 2^32/2^12=1 million entries. 4 bytes per entry, 1M*4=4MB page table, which is often not available.  
@@ -329,8 +329,8 @@ Properties:
 #### Example
 Memory page with 4KB holds 1KB entries, 4B each. P1 >= log(L1 entries) -> 1K entries = 10 bits. P2 = log(L2 entries) -> 10 bits.
 P1 = P2 = 10, d = 12.  
-Maximum vitrual space size = #entries in L1\*#L2\*pageSize = 4GB
-Maximum physical size = 2^20\*4K = 4GB.  
+Maximum virtual space size = #entries in L1\*#L2\*pageSize = 4GB
+Maximum physical size = 2^20\*4K = 4GB. The 20 is given, as the physical page number is 20 bits. Otherwise, with table entry size being 4B = 32bits, Maximum physical size is 2^32\*4K.  
 
 Memory page with 4KB holds 1KB entries, **2B** each. P1 >= log(L1 entries) -> 1K entries = 10 bits. P2 = log(L2 entries) -> 10 bits.
 P1 = 9, P2 = 11, d = 12.  
