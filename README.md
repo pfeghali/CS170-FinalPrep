@@ -205,7 +205,7 @@ A semaphore is a lock representative of a non-negative integer. This integer is 
  - `P()` = wait - waits until counter is greater than 0
  - `V()` = signal - signals waiting threads that their is space and increments the counter
 
-We call a binary semaphore a mutex lock.  
+Note that a binary semaphore can implement a mutex lock.
 ### Conditional variables
 We use conditional variables with locks to specify more general waiting conditions. Threads are blocked and placed in a waiting queue - woken up after receieving a signal.  
 Main functions:
