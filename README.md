@@ -588,3 +588,41 @@ Assume 4kb blocks. 1k entries * 1k entries * 4kb data = 4GB.
 
 Max size = sum.
 This gives some good leeway to small files and supports large files well.
+
+## Job-Scheduling
+Job-schdeuling helps maximize CPU utilization obtained with multi-programming.
+Select from ready processes and allocate CPU to one of them. Active processes transition from ready to running to other waiting queues. Scheduling is the process of decising who gets access to resources.
+We find that CPU bursts dominate usage. We can focus on optimizing burts such that I/O is when we handle complexity.
+- preemptive scheduling - change process state dynamically
+- non-preemprive - a process runs until it is blocked or terminates.
+
+### Scheduling Algorithm
+ - Optimize max CPU utilization
+ - Max throughput
+ - Minimum turnaround time
+ - Minimize waiting time
+ - Minimize response time
+
+#### FIFO scheduling
+Processes arrive in order and process them as they arrive. Let them finish before proceeding. FIFO performance wholly depends on the order in which things arrive.
+
+#### Shortest Job First
+Give preference to short jobs and allow them to run first. This reduces waiting time but starves longer runnig jobs. Hard to implement as well since we do not have size information. Can predict using exponential averaging to predict future time. `\tua_{n+1} = a*t_n+(1-a)*\tua_n`. (*note: I know that LaTeX is not supported in github md, use your imagination :)*)
+
+#### Priority Scheduling
+Each process has some priority, and run in that order. Still leads to starvation.
+
+#### Round Robin
+Each process gets a *quantam* of CPU time, 10-100 ms. The process is then preempted and added to end of queue. If this quantam is too large, then FIFO, and too small then the context switching overhead is too large. While there is some overhead due to context switching leading to longer turnaround time, the response is significantly better.
+
+#### Context Switching Overhead
+Thread switching is only slightly fastr than process ~100ns, swithcing cores is around 2x more expensive. Context switch time depends on the size of the working set, and can cinrease by multiple orders of magnitude depending on the size of the working set.
+
+#### Multi-Level Feedback Queue
+Maintain multiple queues. Each gets a percentage of system resources. Processes can move between these queues, such that high priority jobs that take a while to complete will slowly lose their priority. Different quesues can also have different scheduling algos and time slices.
+
+#### Thread Scheduling
+If you declare kernel threads, time will be shared with other processes and such, otherwise, will be shared in the same time allocation as your process.
+
+#### Affinity
+The allocation of a process to the same core for cache reuse. Very important.
