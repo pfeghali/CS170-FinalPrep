@@ -749,3 +749,45 @@ Logs allow for safe modification of disk.
 2. If a transactin starts with no commit
 3. Discard log entried
 4. Disk remains unchanged
+
+## Hadoop
+Open source distributed file system.  
+Clusters have a primary switch connected to rack switches to interconnect nodes.  
+To users, these systems provide the same high-level interface that they'd expect. Files are distributed to a number of machines and can concurrently access data. These systems are optimized for batch processing.  
+
+#### Assumptions
+ - These systems are built assuming high-component failure rates
+ - Modest number of huge files
+ - Generally we append to files - massive transactional logs
+ - large streamed reads
+ - High throughput is favored over low-latency
+
+### Structure
+ - Files are split into 64mb blocks
+ - Blocks are replicated across several datanodes as slaves
+ - Namenode stores metadata as a master
+   - Maps files to a file-ids and a list of block-ids and data nodes
+   - The entire meta-data is in main memory, no demand paging
+   - Transaction log is kept
+ - Files are append only
+ - On read, use any nearby copy
+ - On write, write to three replicas
+ - Data nodes
+   - Have block-servers storing data and block-level metadata. Periodically sends a report of all existing blocks to the namenode.
+   - Helpes facilitate the pipelining of data.
+ - Replicas are places everywhere
+   - One locally
+   - Second on remote
+   - Third on same remote
+   - Rest randomply places
+
+### Node failure
+We ask each datanode to send a heartbeat.
+
+### Data pipelining
+ 1. Client retrieves list of datanodes on which to place replicas of a block
+ 2. Client writes block to the first datanode
+ 3. When all replicas are written, the client moves on to write the next block in the file
+
+#### Data Validation
+We use checksums to validate data. If we read data nad checksum is bad, we cand try another replica.
