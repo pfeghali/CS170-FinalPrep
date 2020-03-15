@@ -470,3 +470,121 @@ We can map a disk block to a page in memory. This simplifies file access through
 ### ZIPF Distribution
 For the kth item, the popularity is `1/k^c`
 Generally, we should cache popular items to increase our cache hit ratio.
+
+## File Systems
+Lets define a file as a contigous logical address space in a persistent storage. Files can be structured:
+ - With no structure perse: Sequence of words or bytes with meaning to the file creator, but may not be universally understood
+ - Simple record structure: Lines, fixed length or variable length, maybe consider a csv
+ - Complex structure: Formatted JPEG or some sort of more complex working model.
+
+#### File attributes
+ - Name: only information kept in human readable form
+ - Identifer: OS ID
+ - Type
+ - Location
+ - Size
+ - Protection: just `chmod -R 777 .` and don't worry about protections!
+ - Time, Data, and User identification
+
+#### File ops
+ - Create
+ - Open
+ - Close
+ - Write
+ - Read
+ - Reposition / Seek
+ - Delete
+ - Truncate
+
+#### Access Options
+ - Sequential: loop through the bytes in a file and read in-order
+ - Direct: Seek to desired position and read.
+
+#### File System Abstraction
+ - Directory
+ - Path: UNique string that identifies that file/dir
+ - Links
+   - Hard - name to metadata location
+   - Soft - name to alternate name
+ - Mount: From name in one file system to root of another
+
+### UNIX file system API
+ - Create
+ - Link
+ - Unlink
+ - Createdir
+ - Rmdir
+ - Open
+ - Close
+ - Read
+ - Write
+ - Seek
+ - fync: force file modifications to disk if they're in memory
+
+### Memory protections 101
+ - Can either have permissions to read, write, or/and execute.
+ - Can give permissions to a user, group, or all.
+
+CHMOD changed permissions. CHGRP chages the group associated with an item.
+
+## File-System Structure
+FSs have a special root-block which contains the root directory. We have per-file control blocks (*FCB*) which contains details about the file. Knows as i-nodes in unix.
+
+#### Layered file systems
+Virtual File Systems provide an OO way of implementing file systems. They allow for the same API to be used to interface with different types of systems.
+
+### Directory Implementation
+ - Linear list of files
+   - Easy to program, but will be slow with a lot of files
+ - Hash-tables
+   - Implement with a linear list with a hash data strucutre. Decreases search time, but we'll get collissions
+   - Search trees
+
+### Unix File system
+File-systems have I-Nodes and Data Blocks. The max number of I-Nodes is fixed at file-system creation. The typical number is 1% of total file system size. I-Node #2 is for root, and #1 is for tracking bad blocks.  
+B-Trees are used in large directories to keep track of filenames.
+
+#### Example
+How many disk accesses to read the first data block of "/home/tom/foo.txt"?
+1. Read in file header for root
+2. Read in first data block for root
+3. Read in file header for home
+4. Read in first data block for home, search for tom
+5. Read in file header for tom
+6. Read in first data for tom, search for foo.txt
+7. Read in file header for foo.txt
+8. Fetch first data block for foo.txt
+
+#### Open Files
+When we open a file, we need to manage a file-pointer, file-open-count, keep the disk location of the file, and permissions.
+
+### Disk Space Allocation
+ - Contiguous allocation: Each file ocupies a set of contiguous blocks on disk
+   - Simple and allows for fast random access
+   - Not easy to grow files and leads to external fragmentation
+ - Linked allocation
+   - Each file is a linked list of blocks
+   - Linked list index structure, simple and easy to implement. File tables become a linear map of all blocks on disk
+   - Random access is slow and small file access is slow. Easy to find a free block and append. This also leads to freagmentation as file blocks will likely be scattered.
+ - Direct Data Pointers
+   - Put all the direct data pointers together in the same index block
+   - This supports random access well, and allows better mitigation of external fragmentation
+   - There is a space overhead to manage an index table.
+
+### Levelled Indexed Allocation
+Depending on how tree structured we allow our index tables to be, we can get drastically different max-file sizes.
+
+#### 1-L
+Assume 4kb blocks. Each index hold 1024 entries. `1024 * block-size=4MB`
+
+#### 2-L, single indirection
+Assume 4kb blocks. 1k entries * 1k entries * 4kb data = 4GB.
+
+### Hybrid scheme
+ - First 10-12 are direct - 40-48KB
+ - 1 single indirect - 4MB
+ - 1 double indirect - 4GB
+ - 1 triple indirect - 4TB
+
+Max size = sum.
+This gives some good leeway to small files and supports large files well.
