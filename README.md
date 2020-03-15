@@ -663,3 +663,89 @@ Writing data is somewhat complex and requires that we only write to empty pages.
 
 ### Hybrid Drives
 Use a small SSD as a budfferm then flush later. Much less-expensive and provides faster performnce for general use.
+
+## Reliable Storage
+Disks fail. *Availability* is the probability that the system can accept and process requests. *Durability* is the ability of a system to recover despite faults. *Reliability* is the ability of a system or component to perform its required functions for a specified period of time.  
+ - Mean time before failure
+   - MTBF - inverse of annual failure rate
+ - Mean time to repair
+   - MTTR - measures the time to repair a failed component, hours to days
+ - Unavailibility - MTTR/MTBF
+
+### How to increase durability
+Disk blocks contain ECC codes to deal with small defects.  
+We want to make sure writes survive in short-term, sometimes uses battery-backed RAM. Longr-term, we replicate data and ensure that data is kept independent of failure.
+
+### RAID
+Redundant Array of Inexpensive Disks.  
+Multiple disks work together. We can improve performance with striping - use a group of disks as a single storage unit. We keep a RAID controller to manage disks.
+
+#### RAID 0
+ - Non-redundant disk array
+ - Files are striped across disks
+ - High read throughput, best write throughput
+ - Any disk failure is data loss
+
+#### RAID 1
+ - Mirrored Disks, data is written twice.
+ - On failure, rebuild. On read, choose sastest.
+ - This is expensive and has a high space overhead.
+
+#### RAID 1+0
+ - Pair mirrors first
+ - Stripe on a set of paired mirrors
+
+#### RAID 2
+ - Memory style ECC
+ - For 4 data blocks 3 to manage error codes
+
+#### RAID 3
+ - Bit-interleaved parity.
+ - On the bit level keep track of parity in another disk
+
+#### RAID 4
+ - Block-interleaved parity
+
+#### RAID 5
+ - Block-interleaved distributed parity
+ - To write we need to real old data and parity, then write back to both
+ - A single disk can fail
+
+#### RAID 6
+ - Uses two parity stripes on each disk
+ - Two disks can fail before any data is lost
+
+#### Example
+If block 3 is lost, then `block3 = block1 XOR block2 XOR parity`
+
+### Copy On Write
+If a file is represented as a tree of blocks, only need to update edges on a write. Minimizes possible corruption.
+
+### Transactional File Systems
+Keep a log and applies transactions. Actions are not completed unless they are 'committed'.  
+Thus, the file-system may not be updated immediately, with data preserved in the log.
+1. Get transaction ID
+2. Do sequence, if failure, roll-back
+   1. Find free data blocks
+   2. Find free inode
+   3. Find directory insertion point
+   4. Write map
+   5. Write inode
+   6. Write dir entry
+3. Commit
+
+Helps ensure the transition between consistent states
+
+#### ACID
+ - Atomic
+ - Consistent
+ - Isolated
+ - Durable
+
+Logs allow for safe modification of disk.
+
+#### Crash During Logging
+1. Scan the log
+2. If a transactin starts with no commit
+3. Discard log entried
+4. Disk remains unchanged
