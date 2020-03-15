@@ -626,3 +626,40 @@ If you declare kernel threads, time will be shared with other processes and such
 
 #### Affinity
 The allocation of a process to the same core for cache reuse. Very important.
+
+## Mass-Storage Systems
+ - Positioning Time: Time to move disk arm to cylinder (seek time) + time for head to rotate (rotational latency)
+ - Effective Bandwidth: Average data transfer rate during a transfer
+ - Total disk access time = seek + rotation + transfer time
+   - Seek = time to move arm over track
+   - Rotation time = time to wait for disk to rotate under head - average is cost for half of the track
+   - Transer time = on and off of disk
+
+#### Disk Random Read
+Really slow. For 1 sector `=#reads*(seek + 30/RPM + sectorSize/transferRate)/1000` ~7.3seconds. 1GB takes 8.37 hrs.
+
+#### Disk Sequential Read
+`seek + 30/RPM + #reads*(sectorSize/transferRate)` ~16.7ms. 1GB takes 66.8s. Fine performance.
+
+### Disk scheduling
+If we schedule I/O requests we can achieve faster performance
+
+#### First Come First Serve
+We end up moving the disk head a lot. This is really bad.
+
+#### Shortest Seek Time First
+Select request with shortest seek time. This reposiitons actively which is pretty smart, and given batched requests you can not starve.
+
+#### Elevator Scheduling
+Move disk arm in one direction until all requests are satififed, then reverse direction. Quickly can realuze this is silly, as we are on a disk (circle) and not an elevator (line).
+
+#### Circular Scan
+Scans in a circle, pretty darn fair.
+
+### SSDs
+Generally better in every way. faster, higher throughput, no moving parts. Downside is cost and their life-cycle is generally shorter.  
+Writing data is somewhat complex and requires that we only write to empty pages. Easing can take 1.5ms. Controller maintains pool of empty blocks. Overwriting is simply writing to an empty space and recording old data as obselete. From time to time, we garbage collecting obselete data by copying valid to new blocks. This requires higher voltage and in the long-term can damage memory cells.  
+`Latency = Queuing Time + Controller Time _ Transfer Time`
+
+### Hybrid Drives
+Use a small SSD as a budfferm then flush later. Much less-expensive and provides faster performnce for general use.
