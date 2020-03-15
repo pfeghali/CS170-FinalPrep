@@ -357,3 +357,116 @@ Size of page table grows with the amount of cirtual memory allocated. we can use
 ### Inverted page table
 Have a single hash table for all processes, with a single entry for each real page of memory. Each entry has the virtual address of the page, with metadata concerning the page.  
 This decreases the amount of memory needed to store each page table, but increased the time needed tosearch the table when a page reference occurs.
+
+## Demand Paging
+Modern programs require a lot of memory, but generally don't use all of their memory all of the time. There is generally a 90/10 rule, where programs spend 90% of their time using 10% of their code. Therefore we can leverage main memory as a cache for disk.
+
+### 'Infinite Memory'
+Virtual memory allows for much larger numbers of running processes than otherwise, allowing more concurrency. Basically fit the key portions of their code which you need in memory, and the rest on disk, but with VM allow for them to look like they are in memory. You'd like to minimize the number of times which you bring pages into memory.
+
+### Metadata
+With each page table entry, keep track of a valid/invalid bit. Initially, set to invalid. When not in memory and grabbed, it is then valid after a page fault.  
+If the memory is written to but not written back, it is 'dirty'.
+
+### Handling a page fault
+1. Reference the page table and see if the memory location exists
+2. If it does not, page fault
+3. Locate page
+4. Bring in missing page
+5. If page table is full and need to replace item, follow policy and write bcal
+6. Then restart introduction
+
+Note, we move entire blocks in and out of memory.
+
+### Demand paging performance
+We define the effective access time (EAT) (take `p`=page fault rate): `=(1-p)*memory access cost + p*pageFaultServiceCost`. `pageFaultServiceCost=pageFaultOverhead + swapPageOut + swapPageIn + restartOverhead`.  
+
+#### Example
+Assume MAT = 200ns, avg pageFaultServiceCost = 8ms. `EAT = (1-p)*200 + p(8ms) = 200 + p*7,999,800.`
+If p = .1, `EAT=8.2 microseconds`! 40x slowdown.  
+What if we want a 10% max slowdown? `EAT < 200ns*1.1 -> p<2.5*10^-6`
+
+### Why do we miss?
+Other than being tired and typing incorrectly, there are 3 types of misses
+ - Compulsory misses
+   - Pages that have never been in memory before
+   - These can be reduced using pre-fetching
+ - Capacity misses
+   - Not enough memory, need to increase DRAM
+   - Can also dynamically allocate memory depending on process space allocation
+ - Policy Misses
+   - Happens when pages were in memory but kicked out prematurely due to our replacement policy
+
+## Replacement Policy
+When full, need to make space for new request.
+We want an algo which will result in the minimum number of page faults. The goal is to keep important pages in memory.
+
+### Basics
+1. Find location of page on disk
+2. Find a free frame.
+   1. If there is a free frame, use it
+   2. Otherwise, use a page replacement policy to select a victim
+3.  Swap out the victim page. If the page is dirty, write it back to disk
+4.  Bring in the desired page and update the page and fram tables
+
+### Page replacement policies
+ - First in First Out (FIFO)
+   - Throw our the oldest frame.
+   - This is bad, since it is likely that we will throw out heavily used frames
+ - Optimum (OPT)
+   - Best case assuming that our programs could predict the future. This, like the Loch Ness monster, probably exists but we just haven't found it yet. Similar yet unrelated to the proof that `P=NP`.
+ - Random
+   - Pick a random page. Simple hardware but no gauruntees
+ - Least Recently Used (LRU)
+   - Replace the page that hsa not been used for the longest time
+
+#### Least Recently Used
+Replace the pgae that has been used the least recently, not a bad min approximatino usually. Can be implemented with some sort of list. This requires keeping track of locations in list which in practice can be expensive. We can approximate LRUs though!
+
+#### BeLady's Anomaly
+We'd like the following property - more memory we have the miss rate will go down. Sounds obvious, but with FIFO for example, this may not hold.
+
+### LRU Approximation
+We use a *clock algorithm* to approimate the LRU. We replace an old page, which may not be the oldest. This is implemented in conjunction with a hardware 'use' bit. Each time that memory page is referenced, we set that bit. If the bit is not set, then it probably has not been used in a while.
+On each page faut, we advance the clock hand and check the use bit:
+ - If the use bit is 1, then clear the bit and leave it alone. This is known as a second chance
+ - If 0, then it is a candidate for replacement.
+If all the use bits are set, then we loop around.  
+The clock hand only moves forwards on a pgae fault. We want to have the 'clock hand' moving slowly.
+
+#### Nth chance replcaement
+We can instead of using a single use bit, set some sort of counter to keep track of the number of chances we give any page. We can theoretically get better performance by allowing for replcaement on the nth time that the clock hand cycles through an item.
+
+## Swap-Space
+In short: We allow virtual memory to act as an extension of main memory
+Spaace space can be carved out of the normal file system or a seperate disk partition. We allocate the swap space when the process starts, and hold the text and data segment. The kernel uses swap maps to track usage.  
+
+### Swap allocation + Replacement
+We can either allocate space on innitial process creation or on use. In addition, we can either use some sort of global replacement policy or some sort of local policy for management.
+
+#### Memory Page Allocation
+ - Initially we can have 0. Using demand paging, we can get more from disk as needed.
+ - Equal allocation: Each process can have an equal number of frames
+ - Proportial allocation: allocate proportionally to the size of the process.
+ - Allocate based on the process priority.
+
+#### Thrashing
+If a process does not have enough pages, then the page fault rate is very high. The OS is forces to spend its time swapping pages in and out.
+
+#### Working set
+A working set is the set of memory locations that a process or program has references in the recent past. Represents locality. As a program executes, it transitions through sets of working sets.  
+We have low page faults if working-sets of all active processes fit into memory. Demand paging works by migrating processes from one locality to another. Localities may overlap, and we need sufficient memory so that the working sets fit into memory.Thrashing occurrs when the size of all the working sets exceeds main memory size.
+
+## Page-Size and performance
+Having a bigger page size increases the TLB hit rate, and can increase internal fragmentation. The total page table size can decrease though.
+
+## Memory mapped files
+We can map a disk block to a page in memory. This simplifies file access through direct memory access. This can be managed with demand paging, and several processes may map to the same file as shared data.s
+
+## More caching
+ - Temporal locality: keep recently accessed items near the processor
+ - Spatial lcoality: Data access is generally contiguous
+
+### ZIPF Distribution
+For the kth item, the popularity is `1/k^c`
+Generally, we should cache popular items to increase our cache hit ratio.
